@@ -1,0 +1,25 @@
+#cloud-config
+# Stands up PostgreSQL 17 on an Ubuntu VM so it can play the "on-premises"
+# source for a live online migration. Demo-grade settings - wide-open pg_hba and
+# a well-known password. Do not reuse outside a throwaway demo subscription.
+package_update: true
+
+runcmd:
+  - install -d /usr/share/postgresql-common/pgdg
+  - curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+  - sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+  - apt-get update
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-17
+
+  # logical decoding, required by the migration service in online (CDC) mode
+  - su - postgres -c "psql -c \"ALTER SYSTEM SET wal_level = 'logical';\""
+  - su - postgres -c "psql -c 'ALTER SYSTEM SET max_replication_slots = 10;'"
+  - su - postgres -c "psql -c 'ALTER SYSTEM SET max_wal_senders = 10;'"
+  - su - postgres -c "psql -c \"ALTER SYSTEM SET listen_addresses = '*';\""
+
+  - su - postgres -c "psql -c \"CREATE ROLE replicator WITH LOGIN REPLICATION SUPERUSER PASSWORD 'replicator_pw';\""
+  - su - postgres -c "createdb retail_onprem"
+
+  - sh -c 'echo "host all all 0.0.0.0/0 scram-sha-256" >> /etc/postgresql/17/main/pg_hba.conf'
+  - sh -c 'echo "host replication all 0.0.0.0/0 scram-sha-256" >> /etc/postgresql/17/main/pg_hba.conf'
+  - systemctl restart postgresql
