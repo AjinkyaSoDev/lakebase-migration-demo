@@ -1,5 +1,11 @@
 # Architecture
 
+![Architecture](architecture.png)
+
+*Source: [`architecture.excalidraw`](architecture.excalidraw) - open at
+[aka.ms/excalidraw](https://aka.ms/excalidraw) to edit. Regenerate the PNG with
+`python docs/_gen_diagram.py && python docs/_render_diagram.py`.*
+
 ## The scenario
 
 A retailer runs order capture on PostgreSQL in their own data centre. It works,
