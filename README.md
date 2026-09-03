@@ -30,6 +30,7 @@ protocol.
 | [`docs/02-setup-guide.md`](docs/02-setup-guide.md) | Step-by-step build, ~60 min first time |
 | [`docs/03-demo-script.md`](docs/03-demo-script.md) | Minute-by-minute run of show, with the talk track |
 | [`docs/04-tooling.md`](docs/04-tooling.md) | VS Code extensions and PostgreSQL server extensions - and why `pglogical` is *not* one of them |
+| [`docs/05-branching.md`](docs/05-branching.md) | Cutover rehearsal, point-in-time recovery and dev/test fleets on copy-on-write branches |
 | [`docs/architecture.excalidraw`](docs/architecture.excalidraw) | Editable source for the diagram above |
 
 ## Contents
@@ -52,6 +53,7 @@ databricks/
          01b_jdbc_ingest.py        notebook fallback (batch MERGE)
          02_create_synced_tables.py  Delta -> Lakebase synced tables
          03_serve_queries.sql      the payoff queries, run against Lakebase
+         04_branching.py           rehearse / recover / fleet / list / cleanup
          99_teardown.sql           clean up the Databricks side
 ```
 

@@ -161,6 +161,63 @@ transaction:
 
 ---
 
+## Optional +5 min - branching (the part they remember)
+
+Cut this if you are tight on time, but it is the strongest segment in the deck
+for a Postgres-literate audience, because nothing they run today does it.
+
+> "One more thing. The application is now on Lakebase. Watch what that makes
+> possible that a managed Postgres service cannot."
+
+Terminal 2:
+
+```powershell
+python databricks\04_branching.py rehearse --ttl-hours 2
+```
+
+While it runs - it takes seconds, which is the point:
+
+> "That just forked production. Not a restore, not a dump - a copy-on-write
+> fork. The size of the database has no effect on how long that takes, and I
+> only pay for pages that diverge. Production didn't notice."
+
+The script applies a schema change and an index build **on the branch**, then
+prints row parity and the branch's logical size.
+
+> "That's the cutover rehearsal, against real production data, on a branch that
+> deletes itself in two hours. Run it nightly and cutover night stops being an
+> event."
+
+Be straight about the limit before anyone asks:
+
+> "There's no merge button. Reset only flows parent to child, so the branch
+> proves the change is safe - it doesn't ship it. I still re-run the migration
+> against production with the same tooling I already use."
+
+If you have another minute, the recovery framing lands with any DBA:
+
+```powershell
+python databricks\04_branching.py recover --minutes-ago 15
+```
+
+> "Someone drops a table at 10:23. You branch from 10:22, pull the rows back,
+> and production never stopped. Restore time barely depends on database size,
+> because it's a metadata operation over versioned storage."
+
+Then the constraint, unprompted:
+
+> "Two things I'd want in writing before promising anyone an RPO: that's a new
+> *root* branch and you only get three, and how far back you can go is the
+> project's restore window - two to thirty days, seven by default."
+
+Always finish with `cleanup`:
+
+```powershell
+python databricks\04_branching.py cleanup
+```
+
+---
+
 ## 0:28-0:30 - Close
 
 Three things to leave them with:
