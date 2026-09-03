@@ -51,6 +51,13 @@ Databricks Lakeflow Connect for PostgreSQL is the same story - `pgoutput`, a
 publication, and a replication slot. No extension appears anywhere in its
 [source setup docs](https://docs.databricks.com/aws/en/ingestion/lakeflow-connect/postgresql-source-setup).
 
+> **AWS DMS is the exception - do not carry `pgoutput` across.** Everything above
+> is scoped to the *Azure* migration service and Lakeflow Connect. AWS Database
+> Migration Service does **not** support `pgoutput`. It uses **`test_decoding`**
+> by default, and can use **`pglogical`** where available. So on an AWS-sourced
+> migration the "you don't need pglogical" advice flips. The plugin depends on
+> which service is reading the WAL, not on PostgreSQL itself.
+
 ### Where extensions *do* bite you
 
 Even though this demo installs none, extensions matter in a real migration:
@@ -76,9 +83,9 @@ Verdicts for extensions people commonly ask about:
 
 | Extension | Needed here? | Notes |
 | --- | --- | --- |
-| `pglogical` | **No** | Only DMS Classic needed it. Available on Azure PG Flex, unused by this design. |
-| `pgoutput` | **Yes, implicitly** | Built-in plugin, *not* an extension. Nothing to install. |
-| `test_decoding` | No | Built-in. Only used automatically for source PG < 10. |
+| `pglogical` | **No** | Not needed by *this* (Azure) design; DMS Classic required it. **AWS DMS can use it** - see the note above. |
+| `pgoutput` | **Yes, implicitly** | Built-in plugin, *not* an extension. Nothing to install. **Not supported by AWS DMS.** |
+| `test_decoding` | No | Built-in. Used for source PG < 10 here - but it is **AWS DMS's default plugin**. |
 | `wal2json` | No | A different output plugin. Neither tool uses it. |
 | `pg_stat_statements` | Optional | Useful for the "why is it slow" story. Allow-list on target if present on source. |
 | `postgres_fdw` / `dblink` | No | Allow-list on target only if the source has them. |
