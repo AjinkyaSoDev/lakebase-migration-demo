@@ -11,9 +11,18 @@ never dies on stage.
 
 ## Option A - Lakeflow Connect managed Postgres connector (the story)
 
+> **Status check before you build a session around this.** The Lakeflow Connect
+> PostgreSQL connector is in **Public Preview** and requires enrolment - talk to
+> your Databricks account team first. It also requires **PostgreSQL 13+**
+> (this demo runs 17). If you are not enrolled, use Option B and adjust the talk
+> track; the Lakebase half of the demo is unaffected either way.
+
 Lakeflow Connect reads the Postgres logical replication slot for you, so the
 same CDC mechanism that fed the migration now feeds the lakehouse. No Spark
 code to maintain.
+
+It uses **native logical replication with the built-in `pgoutput` plugin** -
+there is no extension to install, no `pglogical`, no `wal2json`.
 
 ### 1. Prepare the source (once)
 

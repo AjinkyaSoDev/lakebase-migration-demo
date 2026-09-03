@@ -31,7 +31,12 @@ Logical replication has to be on before anything else works:
 wal_level = logical
 max_replication_slots = 10
 max_wal_senders = 10
+wal_sender_timeout = 0     -- Azure recommends 0 for long online migrations
 ```
+
+No PostgreSQL *extensions* are required - both the Azure migration service and
+Lakeflow Connect use native logical replication with the built-in `pgoutput`
+plugin. See [`04-tooling.md`](04-tooling.md) if you were expecting `pglogical`.
 
 Restart Postgres, then:
 
@@ -60,6 +65,7 @@ listen_addresses = 'localhost'
 wal_level = logical
 max_replication_slots = 10
 max_wal_senders = 10
+wal_sender_timeout = 0
 "@
 
 & "$bin\pg_ctl.exe" -D $dd -l "$dd\server.log" start

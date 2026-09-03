@@ -63,23 +63,47 @@ def ensure_database(drop=False):
 
 
 def check_wal_level(conn):
+    """Report every server setting the two CDC consumers depend on.
+
+    Azure's migration service and Lakeflow Connect both use native logical
+    replication with the built-in pgoutput plugin - no pglogical, no wal2json,
+    no CREATE EXTENSION of any kind.
+    """
+    wanted = {
+        "wal_level": "logical",
+        "max_replication_slots": ">= 2 (one slot per consumer)",
+        "max_wal_senders": ">= max_replication_slots",
+        "wal_sender_timeout": "0 (Azure recommends disabling the 60s timeout)",
+    }
+    got = {}
     with conn.cursor() as cur:
-        cur.execute("SHOW wal_level")
-        level = cur.fetchone()[0]
+        for p in wanted:
+            cur.execute(f"SHOW {p}")
+            got[p] = cur.fetchone()[0]
         cur.execute("SELECT rolsuper FROM pg_roles WHERE rolname = current_user")
         row = cur.fetchone()
         is_super = bool(row and row[0])
-    print(f"  wal_level = {level}")
-    if level != "logical":
-        print("\n  !! Logical decoding is OFF. Azure DMS online migration and Lakeflow")
-        print("     Connect both need it. Run these, then restart the service:\n")
+
+    for p, v in got.items():
+        print(f"  {p:<24} = {v:<10} want {wanted[p]}")
+
+    ok = got["wal_level"] == "logical"
+    if not ok:
+        print("\n  !! Logical decoding is OFF. The Azure migration service (Online mode)")
+        print("     and Lakeflow Connect both need it. Run these, then RESTART:\n")
         print("       ALTER SYSTEM SET wal_level = 'logical';")
         print("       ALTER SYSTEM SET max_replication_slots = 10;")
         print("       ALTER SYSTEM SET max_wal_senders = 10;")
-        print("\n       Restart-Service postgresql-x64-17\n")
+        print("       ALTER SYSTEM SET wal_sender_timeout = 0;")
+        print("\n       Restart-Service postgresql-x64-17")
+        print("       (or: pg_ctl -D <datadir> restart)\n")
+    elif got["wal_sender_timeout"] not in ("0", "0ms"):
+        print("\n  note: wal_sender_timeout is not 0. Azure recommends 0 for long")
+        print("        online migrations so the sender is not dropped mid-copy:")
+        print("          ALTER SYSTEM SET wal_sender_timeout = 0; SELECT pg_reload_conf();\n")
     if not is_super:
         print("  note: current user is not a superuser; CREATE ROLE ... REPLICATION may fail")
-    return level == "logical"
+    return ok
 
 
 def run_sql_file(conn, path):

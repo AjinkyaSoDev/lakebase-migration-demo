@@ -29,6 +29,7 @@ protocol.
 | [`docs/01-architecture.md`](docs/01-architecture.md) | How it fits together, and the two product constraints that force this shape |
 | [`docs/02-setup-guide.md`](docs/02-setup-guide.md) | Step-by-step build, ~60 min first time |
 | [`docs/03-demo-script.md`](docs/03-demo-script.md) | Minute-by-minute run of show, with the talk track |
+| [`docs/04-tooling.md`](docs/04-tooling.md) | VS Code extensions and PostgreSQL server extensions - and why `pglogical` is *not* one of them |
 | [`docs/architecture.excalidraw`](docs/architecture.excalidraw) | Editable source for the diagram above |
 
 ## Contents
